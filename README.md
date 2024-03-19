@@ -19,23 +19,23 @@
 - React (frontend)
 
 ##  Cсылка на развёрнутое приложение в сети: 
-- #### https://django-training.online/ 
+- #### https://boytsevserver.sytes.net/ 
 
 ## Как развернуть: 
  
  - Клонироуйте репозиторий:
  
-    
+
 bash
     git clone git@github.com:Dmitriy-boytsev/kittygram_final.git
  - Создайте файл .env
 
-    
+
 bash
     touch .env
 - Заполните файл переменными окружения
 
-    
+
 bash
     POSTGRES_DB=<БазаДанных>
     POSTGRES_USER=<имя пользователя>
@@ -49,18 +49,18 @@ bash
 
 - Запустите Dockercompose
 
-    
+
 bash
     sudo docker compose -f docker-compose.yml up -d
 
 - Сделайте миграции и соберите статику
 
-   
+
 bash
     sudo docker compose -f docker-compose.yml exec backend python manage.py migrate
     sudo docker compose -f docker-compose.yml exec backend python manage.py collectstatic
     sudo docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. /backend_static/static/ 
-    
+
 
 
 
