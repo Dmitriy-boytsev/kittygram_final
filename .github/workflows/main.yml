@@ -1,6 +1,6 @@
 name: Main Kittygram workflow
 
-on: [push]
+on: push
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -44,6 +44,7 @@ jobs:
     name: Push Docker image to DockerHub
     runs-on: ubuntu-latest
     needs: tests
+    if: github.ref_name == 'main'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -62,7 +63,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ddmmaa/kittygram_backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_backend:latest
 
   frontend_tests:
     runs-on: ubuntu-latest
@@ -88,6 +89,7 @@ jobs:
     name: Push frontend Docker image to DockerHub
     runs-on: ubuntu-latest
     needs: frontend_tests
+    if: github.ref_name == 'main'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -106,11 +108,12 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ddmmaa/kittygram_frontend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_frontend:latest
 
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
     runs-on: ubuntu-latest
+    if: github.ref_name == 'main'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -129,7 +132,7 @@ jobs:
         with:
           context: ./nginx/
           push: true
-          tags: ddmmaa/kittygram_gateway:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_gateway:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -171,12 +174,19 @@ jobs:
             sudo docker system prune -af
 
   send_message:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - name: Send message
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: Деплой kittygram успешно выполнен!
+  runs-on: ubuntu-latest
+  needs: deploy
+  steps:
+    - name: Set commit message
+      id: commit
+      run: echo "::set-output name=message::[$GITHUB_ACTOR] ${{ github.event.commits[0].message }}"
+
+    - name: Send message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          Деплой kittygram успешно выполнен!
+          Сделал пуш: ${{ steps.commit.outputs.message }}
+          Ссылка на коммит: [смотреть изменения](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
